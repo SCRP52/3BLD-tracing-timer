@@ -15,11 +15,17 @@ import {
 } from "@/utils/orientation";
 import { SettingsContext } from "@/context/SettingsContext";
 import { applyScramble } from "@/utils/scramble/applyScramble";
+import TraceTimer from "./TraceTrainer/TraceTimer";
+import { Button } from "./ui/button";
 
 export default function HomePage() {
   const [scramble, setScramble] = useState(
     "F2 R' B' U R' L F' L F' B D' R B L2",
   );
+  const [scrambleMode, setScrambleMode] = useState<"normal" | "edge-only" | "corner-only">("normal");
+  const [timerStatus, setTimerStatus] = useState<"ready" | "running" | "finished">("ready");
+  const [hasRevealed, setHasRevealed] = useState(false);
+  const [useTimer, setUseTimer] = useState(true);
 
   const context = useContext(SettingsContext);
   if (!context)
@@ -29,13 +35,63 @@ export default function HomePage() {
     settings: { orientation, scrambleOrientation },
   } = context;
 
-  // simplifyScramble is now async (dynamic import of cubing/alg + cubing/puzzles).
-  // Use state + effect to resolve it without blocking renders.
-  const [simplifiedScramble, setSimplifiedScramble] = useState(scramble);
+  // Lắng nghe cấu hình bật/tắt Timer từ Settings và trạng thái Timer
+  useEffect(() => {
+    const saved = localStorage.getItem("useTimer");
+    if (saved !== null) {
+      setUseTimer(saved !== "false");
+    }
+
+    const handleTimerToggle = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.useTimer === "boolean") {
+        setUseTimer(customEvent.detail.useTimer);
+      }
+    };
+
+    const handleStatusChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.status) {
+        setTimerStatus(customEvent.detail.status);
+      }
+    };
+
+    window.addEventListener("trace-timer-toggle", handleTimerToggle);
+    window.addEventListener("trace-status-change", handleStatusChange);
+    return () => {
+      window.removeEventListener("trace-timer-toggle", handleTimerToggle);
+      window.removeEventListener("trace-status-change", handleStatusChange);
+    };
+  }, []);
 
   useEffect(() => {
+    setTimerStatus("ready");
+    setHasRevealed(false);
+  }, [scramble]);
+
+  const handleRevealResult = () => {
+    if (timerStatus === "running") {
+      setTimerStatus("finished");
+      setHasRevealed(true);
+      window.dispatchEvent(new CustomEvent("trace-giveup"));
+      return;
+    }
+    if (timerStatus === "finished") {
+      setHasRevealed(true);
+    }
+  };
+
+  const triggerNewScramble = () => {
+    if (timerStatus === "running") return;
+    const button = document.querySelector("[data-scramble-btn='true']") as HTMLButtonElement;
+    if (button) {
+      button.click();
+    }
+  };
+
+  const [simplifiedScramble, setSimplifiedScramble] = useState(scramble);
+  useEffect(() => {
     let cancelled = false;
-    // Keep computations consistent while the async simplification is in-flight.
     setSimplifiedScramble(scramble);
     simplifyScramble(scramble).then((result) => {
       if (!cancelled) setSimplifiedScramble(result);
@@ -45,7 +101,6 @@ export default function HomePage() {
     };
   }, [scramble]);
 
-  // Memoize all heavy cube computations.
   const { scrambleForPreview, rotationForPreview, cube } = useMemo(() => {
     const rotation = orientationToRotation(orientation);
     const scrambleRotation = orientationToRotation(scrambleOrientation);
@@ -60,7 +115,6 @@ export default function HomePage() {
     const afterRotation = makeWhiteTopGreenFront(
       applyScramble({ type: "3x3", scramble: realScramble }),
     );
-    // Make White Top Green Front
     const realScrambleWG = `${realScramble} ${afterRotation}`;
     const cube = applyScramble({
       type: "3x3",
@@ -70,6 +124,8 @@ export default function HomePage() {
     return { scrambleForPreview, rotationForPreview, cube };
   }, [scramble, simplifiedScramble, orientation, scrambleOrientation]);
 
+  const isTimerRunning = useTimer && timerStatus === "running";
+
   return (
     <div className="container mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
       <div className="flex flex-wrap items-center gap-2">
@@ -78,11 +134,45 @@ export default function HomePage() {
           scramble={scrambleForPreview}
           rotation={rotationForPreview}
         />
-        <ScrambleButton setScramble={setScramble} />
+        <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
+          <ScrambleButton setScramble={setScramble} onScrambleTypeChange={setScrambleMode} />
+        </div>
       </div>
-      <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+      
+      <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
+        <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+      </div>
+
       <Separator className="my-6" />
-      <MemoResult cube={cube} />
+      
+      <TraceTimer 
+        key={scramble}
+        newScramble={triggerNewScramble} 
+        scrambleMode={scrambleMode} 
+        useTimer={useTimer}
+      />
+      
+      {useTimer ? (
+        timerStatus !== "ready" && (
+          <div className="space-y-4">
+            {!hasRevealed ? (
+              <Button 
+                variant="secondary"
+                className="w-full py-8 text-base font-semibold border border-dashed border-muted-foreground/30"
+                onClick={handleRevealResult}
+              >
+                {timerStatus === "running" ? "Show Result(DNF)" : "Show Results"}
+              </Button>
+            ) : (
+              <div className="rounded-xl border p-4 bg-card text-card-foreground">
+                <MemoResult cube={cube} />
+              </div>
+            )}
+          </div>
+        )
+      ) : (
+        <MemoResult cube={cube} />
+      )}
     </div>
   );
 }

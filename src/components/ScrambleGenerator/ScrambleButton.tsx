@@ -25,11 +25,15 @@ const SCRAMBLE_TYPE_LABELS: Record<ScrambleTypeOption, string> = {
   corners: "Corner",
 };
 
+interface ScrambleButtonProps {
+  setScramble: (scramble: string) => void;
+  onScrambleTypeChange?: (mode: "normal" | "edge-only" | "corner-only") => void;
+}
+
 export default function ScrambleButton({
   setScramble,
-}: {
-  setScramble: (scramble: string) => void;
-}) {
+  onScrambleTypeChange,
+}: ScrambleButtonProps) {
   const [scrambleType, setScrambleType] = useState<ScrambleTypeOption>("333");
   // Lazy-load cstimer_module only when the user clicks Scramble for the first time.
   const cstimerRef = useRef<typeof import("cstimer_module") | null>(null);
@@ -47,11 +51,23 @@ export default function ScrambleButton({
 
   const handleSelectType = useCallback((type: ScrambleTypeOption) => {
     setScrambleType(type);
-  }, []);
+    
+    // Đồng bộ ngược trạng thái về HomePage để map sang TraceTimer
+    if (onScrambleTypeChange) {
+      if (type === "edges") {
+        onScrambleTypeChange("edge-only");
+      } else if (type === "corners") {
+        onScrambleTypeChange("corner-only");
+      } else {
+        onScrambleTypeChange("normal");
+      }
+    }
+  }, [onScrambleTypeChange]);
 
   return (
     <div className="inline-flex items-center rounded-md border border-input bg-background shadow-sm">
       <Button
+        data-scramble-btn="true"
         variant={"ghost"}
         onClick={handleGenerate}
         className="px-3 py-2 text-sm rounded-r-none hover:bg-accent hover:text-accent-foreground bg-background shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50"

@@ -77,6 +77,11 @@ export default function ScrambleInputField({
       value={localValue}
       onChange={handleChange}
       onInput={handleInput}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation(); // Chặn đứng phím Enter không cho kích hoạt đổi đề của đồng hồ
+        }
+      }}
       className="w-full p-3 text-lg md:text-lg font-mono leading-normal resize-none overflow-hidden min-h-[40px]" // Added font-mono and tracking-wide
     />
   );

@@ -35,6 +35,10 @@ const defaultSettings: Settings = {
   useCustomLetterPairsCorner: true,
   separateLetterPairs: false,
   letterPairsEdge: {},
+
+  traceMode: false,
+  hideTraceTimer: true,
+  liveTraceValidation: true,
 };
 
 type SettingsProviderProps = {

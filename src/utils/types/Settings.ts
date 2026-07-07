@@ -33,4 +33,10 @@ export type Settings = {
 
   separateLetterPairs: boolean;
   letterPairsEdge: { [key: string]: string };
+  
+  traceMode: boolean;
+  hideTraceTimer: boolean;
+  liveTraceValidation: boolean;
+  traceRealtimeCheck: boolean;
+  tracePauseWhenHidden: boolean;
 };

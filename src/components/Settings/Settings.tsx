@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Select,
   SelectContent,
@@ -14,7 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import BufferSelection from "./BufferSelection";
 import CustomLetterScheme from "./CustomLetterScheme";
@@ -25,6 +26,47 @@ import PreviewStyle from "./PreviewStyle";
 import PseudoSwap from "./PseudoSwapParity";
 import ResultStyle from "./ResultStyle";
 import Scramble from "./Scramble";
+
+// Component con để bật tắt Timer trong Settings
+function TracingTimerSetting() {
+  const [enabled, setEnabled] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("useTimer");
+    if (saved !== null) {
+      setEnabled(saved !== "false");
+    }
+  }, []);
+
+  const handleToggle = (val: boolean) => {
+    setEnabled(val);
+    localStorage.setItem("useTimer", String(val));
+    window.dispatchEvent(
+      new CustomEvent("trace-timer-toggle", {
+        detail: { useTimer: val },
+      })
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
+        <div>
+          <h4 className="text-sm font-semibold">Enable Tracing Timer</h4>
+          <p className="text-xs text-muted-foreground">
+            Sử dụng bộ đếm thời gian và ẩn kết quả khi trace.
+          </p>
+        </div>
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => handleToggle(e.target.checked)}
+          className="w-5 h-5 rounded accent-primary cursor-pointer"
+        />
+      </div>
+    </div>
+  );
+}
 
 const settingsSections = [
   {
@@ -53,6 +95,11 @@ const settingsSections = [
     Component: Scramble,
   },
   {
+    value: "item-4.6",
+    title: "Tracing Timer",
+    Component: TracingTimerSetting,
+  },
+  {
     value: "item-5",
     title: "Cube Preview",
     Component: PreviewStyle,
@@ -74,7 +121,15 @@ export default function Settings() {
     settingsSections[0].Component;
 
   return (
-    <Sheet>
+    <Sheet
+      onOpenChange={(open) => {
+        window.dispatchEvent(
+          new CustomEvent("trace-settings-toggle", {
+            detail: { isOpen: open },
+          })
+        );
+      }}
+    >
       <SheetTrigger asChild>
         <Button variant={"outline"} size={"icon"}>
           ☰
@@ -82,7 +137,7 @@ export default function Settings() {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-full sm:max-w-3xl flex flex-col p-0" // Removed default padding
+        className="w-full sm:max-w-3xl flex flex-col p-0"
       >
         <SheetHeader className="px-6 pt-6 pb-4 border-b">
           <SheetTitle>Settings</SheetTitle>
@@ -96,7 +151,7 @@ export default function Settings() {
                   variant="ghost"
                   className={cn(
                     "justify-start",
-                    activeSection === value && "bg-muted",
+                    activeSection === value && "bg-muted"
                   )}
                   onClick={() => setActiveSection(value)}
                 >

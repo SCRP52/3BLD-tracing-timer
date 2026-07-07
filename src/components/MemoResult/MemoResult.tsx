@@ -24,6 +24,9 @@ export default function MemoResult({ cube }: { cube: Cube }) {
 
   const { settings } = context;
   const [isResultOpen, setIsResultOpen] = useState(true);
+  const handleGiveUp = () => {
+  window.dispatchEvent(new CustomEvent("trace-giveup"));
+};
 
   if (!cube) {
     return (
@@ -93,7 +96,12 @@ export default function MemoResult({ cube }: { cube: Cube }) {
   return (
     <div className="mt-2 bg-card text-card-foreground rounded-xl p-3 shadow-md max-w-[600px] mx-auto text-center break-words">
       <Collapsible open={isResultOpen} onOpenChange={setIsResultOpen}>
-        <CollapsibleTrigger asChild>
+        <CollapsibleTrigger
+  asChild
+  onClick={() => {
+    window.dispatchEvent(new CustomEvent("trace-giveup"));
+  }}
+>
           <div className="flex items-center justify-between space-x-4 px-1 cursor-pointer">
             <h2 className="text-xl font-semibold text-muted-foreground">
               Result
@@ -185,7 +193,8 @@ export default function MemoResult({ cube }: { cube: Cube }) {
               </div>
             )}
             <Separator className="my-3 w-3/5 mx-auto" />
-            <h2
+
+<h2
               className={`text-3xl tracking-wide ${
                 hasCornerParity
                   ? "font-extrabold text-destructive"
