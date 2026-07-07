@@ -39,6 +39,8 @@ const defaultSettings: Settings = {
   traceMode: false,
   hideTraceTimer: true,
   liveTraceValidation: true,
+  traceRealtimeCheck: false,
+  tracePauseWhenHidden: true,
 };
 
 type SettingsProviderProps = {
