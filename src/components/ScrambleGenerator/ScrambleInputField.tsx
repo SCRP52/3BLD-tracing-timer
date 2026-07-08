@@ -82,7 +82,8 @@ export default function ScrambleInputField({
           e.stopPropagation(); // Chặn đứng phím Enter không cho kích hoạt đổi đề của đồng hồ
         }
       }}
-      className="w-full p-3 text-lg md:text-lg font-mono leading-normal resize-none overflow-hidden min-h-[40px]" // Added font-mono and tracking-wide
+      // Đã tăng độ xám rõ cho viền ô nhập bằng border-zinc-400 và dark:border-zinc-500
+      className="w-full p-3 text-lg md:text-lg font-mono leading-normal resize-none overflow-hidden min-h-[40px] border border-zinc-400 dark:border-zinc-500 focus-visible:ring-0 focus-visible:border-zinc-500" 
     />
   );
 }

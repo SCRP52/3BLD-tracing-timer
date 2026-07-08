@@ -17,7 +17,7 @@ import {
 import { SettingsContext } from "@/context/SettingsContext";
 import { applyScramble } from "@/utils/scramble/applyScramble";
 import TraceTimer from "./TraceTrainer/TraceTimer";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const [scramble, setScramble] = useState(
@@ -37,7 +37,6 @@ export default function HomePage() {
     settings: { orientation, scrambleOrientation },
   } = context;
 
-  // ... (giữ nguyên logic useEffect và các handle function như cũ)
   useEffect(() => {
     const saved = localStorage.getItem("useTimer");
     if (saved !== null) {
@@ -150,10 +149,8 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen w-full">
-      {/* Tăng max-w, tăng padding, thêm text-lg để nội dung to hơn */}
       <div className={`container mx-auto max-w-6xl p-8 lg:p-12 space-y-10 text-lg transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
         
-        {/* Header Section */}
         <div className="flex flex-wrap items-center gap-4">
           <Settings />
           <CubeSidebar
@@ -169,7 +166,8 @@ export default function HomePage() {
           <ScrambleInputField scramble={scramble} setScramble={setScramble} />
         </div>
 
-        <Separator className="my-8" />
+        {/* Tăng độ xám thanh ngăn cách */}
+        <Separator className="my-8 bg-zinc-400 dark:bg-zinc-600" />
         
         <TraceTimer 
           key={scramble}
@@ -185,33 +183,38 @@ export default function HomePage() {
                 timerStatus !== "paused" && (
                   <Button 
                     variant="secondary"
-                    className="w-full py-10 text-lg font-bold border border-dashed border-muted-foreground/30 hover:bg-secondary/80"
+                    // Tăng độ xám viền nút Show Results
+                    className="w-full py-10 text-lg font-bold border border-dashed border-zinc-400 dark:border-zinc-500 hover:bg-secondary/80"
                     onClick={handleRevealResult}
                   >
                     {timerStatus === "running" ? "Pause" : "Show Results"}
                   </Button>
                 )
               ) : (
-                <div className="rounded-xl border p-6 bg-card text-card-foreground">
+                // Tăng độ xám viền khung chứa kết quả
+                <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-6 bg-card text-card-foreground">
                   <MemoResult cube={cube} />
                 </div>
               )}
             </div>
           )
         ) : (
-          <MemoResult cube={cube} />
+          <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-6 bg-card text-card-foreground">
+            <MemoResult cube={cube} />
+          </div>
         )}
       </div>
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/40 p-4">
-          <div className="bg-card text-card-foreground p-8 rounded-2xl border shadow-2xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in-95 duration-150">
+          {/* Tăng độ xám viền khung Modal DNF */}
+          <div className="bg-card text-card-foreground p-8 rounded-2xl border border-zinc-400 dark:border-zinc-500 shadow-2xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in-95 duration-150">
             <h3 className="text-2xl font-bold text-destructive">Confirm DNF</h3>
             <p className="text-base text-muted-foreground leading-relaxed">
               This attempt will be marked as DNF and the solution will be revealed.
             </p>
             <div className="flex gap-4 pt-2">
-              <Button variant="outline" className="flex-1 h-12 text-base" onClick={handleCancelReveal}>No</Button>
+              <Button variant="outline" className="flex-1 h-12 text-base border-zinc-400 dark:border-zinc-500" onClick={handleCancelReveal}>No</Button>
               <Button variant="destructive" className="flex-1 h-12 text-base" onClick={handleConfirmReveal}>Yes</Button>
             </div>
           </div>

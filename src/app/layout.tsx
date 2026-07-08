@@ -50,10 +50,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            {/* Tăng height và padding cho header */}
-            <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-12">
-              <span className="text-xl font-semibold sm:text-2xl">
+          {/* Đã tăng độ xám rõ cho viền dưới thanh Header */}
+          <header className="sticky top-0 z-50 w-full border-b border-zinc-400 dark:border-zinc-600 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
+              <span className="text-lg font-semibold sm:text-xl">
                 BLD Trainer
               </span>
               <div className="flex items-center gap-4">
@@ -61,12 +61,7 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          
-          {/* Bao children trong container để nội dung cân giữa và thoáng hơn */}
-          <main className="container mx-auto max-w-7xl px-6 py-10 lg:px-12 lg:py-16">
-            {children}
-          </main>
-          
+          <main className="flex-1">{children}</main>
           <Analytics />
           <Toaster />
         </ThemeProvider>

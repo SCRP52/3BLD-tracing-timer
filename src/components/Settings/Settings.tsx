@@ -1,3 +1,4 @@
+// src/components/TraceTrainer/Settings.tsx
 "use client";
 
 import {
@@ -27,14 +28,18 @@ import PseudoSwap from "./PseudoSwapParity";
 import ResultStyle from "./ResultStyle";
 import Scramble from "./Scramble";
 
-// Component con để bật tắt Timer trong Settings
 function TracingTimerSetting() {
   const [enabled, setEnabled] = useState(true);
+  const [hideTimer, setHideTimer] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("useTimer");
-    if (saved !== null) {
-      setEnabled(saved !== "false");
+    const savedUseTimer = localStorage.getItem("useTimer");
+    if (savedUseTimer !== null) {
+      setEnabled(savedUseTimer !== "false");
+    }
+    const savedHideTimer = localStorage.getItem("hideTimerDuringSolve");
+    if (savedHideTimer !== null) {
+      setHideTimer(savedHideTimer !== "false");
     }
   }, []);
 
@@ -48,11 +53,21 @@ function TracingTimerSetting() {
     );
   };
 
+  const handleHideToggle = (val: boolean) => {
+    setHideTimer(val);
+    localStorage.setItem("hideTimerDuringSolve", String(val));
+    window.dispatchEvent(
+      new CustomEvent("trace-hide-timer-toggle", {
+        detail: { hideTimerDuringSolve: val },
+      })
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
         <div>
-          <h4 className="text-sm font-semibold">Enable Tracing Timer</h4>
+          <h4 className="text-sm font-semibold">Enable Tracing write down</h4>
           <p className="text-xs text-muted-foreground">
             Sử dụng bộ đếm thời gian và ẩn kết quả khi trace.
           </p>
@@ -61,6 +76,21 @@ function TracingTimerSetting() {
           type="checkbox"
           checked={enabled}
           onChange={(e) => handleToggle(e.target.checked)}
+          className="w-5 h-5 rounded accent-primary cursor-pointer"
+        />
+      </div>
+
+      <div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
+        <div>
+          <h4 className="text-sm font-semibold">Hide timer during solve</h4>
+          <p className="text-xs text-muted-foreground">
+            Ẩn số giây chạy khi đang trong quá trình giải.
+          </p>
+        </div>
+        <input
+          type="checkbox"
+          checked={hideTimer}
+          onChange={(e) => handleHideToggle(e.target.checked)}
           className="w-5 h-5 rounded accent-primary cursor-pointer"
         />
       </div>

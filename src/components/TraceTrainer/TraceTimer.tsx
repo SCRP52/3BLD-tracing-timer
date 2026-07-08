@@ -11,17 +11,14 @@ interface TraceTimerProps {
   useTimer?: boolean;
 }
 
-export default function TraceTimer({ 
-  newScramble = () => {}, 
+export default function TraceTimer({
+  newScramble = () => {},
   scrambleMode = "normal",
-  useTimer = true 
+  useTimer = true,
 }: TraceTimerProps) {
-  const [status, setStatus] = useState<"ready" | "running" | "finished">(
-    "ready",
-  );
-
+  const [hideTimerDuringSolve, setHideTimerDuringSolve] = useState(true);
+  const [status, setStatus] = useState<"ready" | "running" | "finished">("ready");
   const [time, setTime] = useState(0);
-  const [startTime, setStartTime] = useState(0);
 
   const [edgeText, setEdgeText] = useState("");
   const [cornerText, setCornerText] = useState("");
@@ -29,39 +26,58 @@ export default function TraceTimer({
 
   const edgeInputRef = useRef<HTMLInputElement>(null);
   const cornerInputRef = useRef<HTMLInputElement>(null);
-  const parityRef = useRef<HTMLInputElement>(null);
+  const parityRef = useRef<HTMLDivElement>(null);
+  const startTimeRef = useRef<number>(0);
   const pausedAt = useRef<number | null>(null);
-  
-  // Dùng ref để theo dõi trạng thái gõ tiếng Việt (Unikey)
   const isComposing = useRef(false);
 
   const [isPaused, setIsPaused] = useState(false);
   const [isDNF, setIsDNF] = useState(false);
 
-  // Helper để lọc text: chỉ giữ chữ cái và khoảng trắng (bỏ số, ký tự đặc biệt, dấu)
-  const sanitizeText = (val: string) => val.replace(/[^a-zA-Z\s]/g, "").toUpperCase();
+  useEffect(() => {
+    const savedHideTimer = localStorage.getItem("hideTimerDuringSolve");
+    if (savedHideTimer !== null) {
+      setHideTimerDuringSolve(savedHideTimer !== "false");
+    }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    const handleHideToggle = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.hideTimerDuringSolve === "boolean") {
+        setHideTimerDuringSolve(customEvent.detail.hideTimerDuringSolve);
+      }
+    };
+
+    window.addEventListener("trace-hide-timer-toggle", handleHideToggle);
+    return () => window.removeEventListener("trace-hide-timer-toggle", handleHideToggle);
+  }, []);
+
+  const sanitizeText = (val: string) =>
+    val.replace(/[^a-zA-Z\s]/g, "").toUpperCase();
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => {
     if (isComposing.current) {
-      // Nếu đang gõ tiếng Việt, cho phép gõ tự do
       setter(e.target.value);
     } else {
-      // Nếu gõ bình thường, lọc ngay lập tức
       setter(sanitizeText(e.target.value));
     }
   };
 
-  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>, setter: (val: string) => void) => {
+  const handleCompositionEnd = (
+    e: React.CompositionEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => {
     isComposing.current = false;
-    // Lọc lần cuối khi hoàn tất từ có dấu
     setter(sanitizeText(e.currentTarget.value));
   };
 
   const focusActiveInput = () => {
-    if (scrambleMode === "corner-only") {
-      cornerInputRef.current?.focus();
-    } else {
+    if (scrambleMode === "edge-only") {
       edgeInputRef.current?.focus();
+    } else {
+      cornerInputRef.current?.focus();
     }
   };
 
@@ -69,19 +85,19 @@ export default function TraceTimer({
     if (!useTimer || status !== "ready") return;
 
     const now = performance.now();
-
     setEdgeText("");
     setCornerText("");
     setParity(false);
     setIsDNF(false);
-
     setTime(0);
-    setStartTime(now);
+    startTimeRef.current = now;
     setStatus("running");
     setIsPaused(false);
     pausedAt.current = null;
 
-    window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "running" } }));
+    window.dispatchEvent(
+      new CustomEvent("trace-status-change", { detail: { status: "running" } })
+    );
 
     requestAnimationFrame(() => {
       focusActiveInput();
@@ -90,11 +106,15 @@ export default function TraceTimer({
 
   const submitTimer = () => {
     if (status === "running" && !isPaused) {
-      setTime(performance.now() - startTime);
+      setTime(performance.now() - startTimeRef.current);
       setStatus("finished");
       edgeInputRef.current?.blur();
       cornerInputRef.current?.blur();
-      window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "finished", isDNF: false } }));
+      window.dispatchEvent(
+        new CustomEvent("trace-status-change", {
+          detail: { status: "finished", isDNF: false },
+        })
+      );
     }
   };
 
@@ -102,17 +122,21 @@ export default function TraceTimer({
     if (status === "running" && !isPaused) {
       pausedAt.current = performance.now();
       setIsPaused(true);
-      window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "paused" } }));
+      window.dispatchEvent(
+        new CustomEvent("trace-status-change", { detail: { status: "paused" } })
+      );
     }
   };
 
   const resumeTimer = () => {
     if (status === "running" && isPaused && pausedAt.current !== null) {
       const pauseDuration = performance.now() - pausedAt.current;
-      setStartTime((prev) => prev + pauseDuration);
+      startTimeRef.current += pauseDuration;
       setIsPaused(false);
       pausedAt.current = null;
-      window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "running" } }));
+      window.dispatchEvent(
+        new CustomEvent("trace-status-change", { detail: { status: "running" } })
+      );
       requestAnimationFrame(() => {
         focusActiveInput();
       });
@@ -124,18 +148,22 @@ export default function TraceTimer({
     setStatus("finished");
     setIsPaused(false);
     pausedAt.current = null;
-    window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "finished", isDNF: true } }));
+    window.dispatchEvent(
+      new CustomEvent("trace-status-change", {
+        detail: { status: "finished", isDNF: true },
+      })
+    );
   };
 
   useEffect(() => {
     if (!useTimer || status !== "running" || isPaused) return;
 
     const id = setInterval(() => {
-      setTime(performance.now() - startTime);
+      setTime(performance.now() - startTimeRef.current);
     }, 10);
 
     return () => clearInterval(id);
-  }, [status, startTime, isPaused, useTimer]);
+  }, [status, isPaused, useTimer]);
 
   useEffect(() => {
     if (!useTimer) return;
@@ -163,7 +191,6 @@ export default function TraceTimer({
       }
 
       e.preventDefault();
-
       if (status === "ready") {
         startTrace();
       }
@@ -197,11 +224,13 @@ export default function TraceTimer({
           setParity(false);
           setIsDNF(false);
           setTime(0);
-          setStartTime(0);
+          startTimeRef.current = 0;
           setStatus("ready");
           edgeInputRef.current?.blur();
           cornerInputRef.current?.blur();
-          window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "ready" } }));
+          window.dispatchEvent(
+            new CustomEvent("trace-status-change", { detail: { status: "ready" } })
+          );
           newScramble();
           return;
         }
@@ -214,7 +243,7 @@ export default function TraceTimer({
           setParity(false);
           setIsDNF(false);
           setTime(0);
-          setStartTime(0);
+          startTimeRef.current = 0;
           newScramble();
           return;
         }
@@ -237,7 +266,7 @@ export default function TraceTimer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [status, startTime, isPaused, newScramble, scrambleMode, useTimer]);
+  }, [status, isPaused, newScramble, scrambleMode, useTimer]);
 
   useEffect(() => {
     if (!useTimer) return;
@@ -281,36 +310,42 @@ export default function TraceTimer({
       window.removeEventListener("trace-resume", handleResumeEvent);
       window.removeEventListener("trace-giveup", handleGiveUpEvent);
     };
-  }, [status, isPaused, startTime, useTimer]);
+  }, [status, isPaused, useTimer]);
 
   if (!useTimer) {
     return null;
   }
 
   return (
-    <div className="my-4 rounded-xl border p-4 space-y-4">
+    <div className="my-4 rounded-none border-2 border-zinc-800 p-4 space-y-4 bg-black text-zinc-100">
       {isPaused ? (
-        <div className="space-y-2 py-4">
-          <div className="text-center text-amber-500 font-semibold mb-2 uppercase tracking-wider">
+        <div className="space-y-2 py-4 border-2 border-zinc-800 p-4 bg-black">
+          <div className="text-center font-black mb-2 uppercase tracking-wider underline text-zinc-500">
             Trace Paused
           </div>
           <button
-            className="w-full rounded-lg border p-2 bg-primary text-primary-foreground font-medium"
+            className="w-full rounded-none border-2 border-zinc-700 p-2 bg-zinc-900 text-zinc-200 font-black hover:bg-zinc-800"
             onClick={resumeTimer}
           >
-            Continue
+            CONTINUE
           </button>
           <button
-            className="w-full rounded-lg border border-red-500 p-2 text-red-500 font-medium bg-background hover:bg-red-500/10 transition-colors"
-            onClick={() => window.dispatchEvent(new CustomEvent("trace-request-giveup"))}
+            className="w-full rounded-none border-2 border-zinc-700 p-2 font-black bg-black text-zinc-500 hover:bg-zinc-900"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("trace-request-giveup"))
+            }
           >
-            Give Up
+            GIVE UP
           </button>
         </div>
       ) : (
         <>
-          <div className="text-center">
-            <div className={`text-3xl font-bold font-mono ${isDNF ? "text-red-500" : ""}`}>
+          <div className={`text-center border-2 border-zinc-800 p-4 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
+            <div
+              className={`text-8xl font-black font-mono tracking-tighter ${
+                isDNF ? "line-through text-zinc-700" : "text-zinc-200"
+              }`}
+            >
               {isDNF ? (
                 "DNF"
               ) : time < 60000 ? (
@@ -324,18 +359,24 @@ export default function TraceTimer({
           </div>
 
           {status === "ready" && (
-            <Button className="w-full" onClick={startTrace}>
-              Start Trace
+            <Button
+              className="w-full h-16 text-2xl font-black bg-zinc-900 text-zinc-400 border-2 border-zinc-800 rounded-none transition-colors hover:bg-zinc-600 hover:text-white"
+              onClick={startTrace}
+            >
+              START TRACE
             </Button>
           )}
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {scrambleMode !== "edge-only" && (
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">Corners</span>
+              <div className="p-4 border-2 border-zinc-800 bg-black space-y-2">
+                <span className="text-xl font-black uppercase tracking-wide text-zinc-400">
+                  Corners
+                </span>
                 <Input
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800"
                   ref={cornerInputRef}
-                  placeholder="Corner memo..."
+                  placeholder="Corner..."
                   value={cornerText}
                   onChange={(e) => handleInputChange(e, setCornerText)}
                   onCompositionStart={() => (isComposing.current = true)}
@@ -346,11 +387,14 @@ export default function TraceTimer({
             )}
 
             {scrambleMode !== "corner-only" && (
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">Edges</span>
+              <div className="p-4 border-2 border-zinc-800 bg-black space-y-2">
+                <span className="text-xl font-black uppercase tracking-wide text-zinc-400">
+                  Edges
+                </span>
                 <Input
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800"
                   ref={edgeInputRef}
-                  placeholder="Edge memo..."
+                  placeholder="Edge..."
                   value={edgeText}
                   onChange={(e) => handleInputChange(e, setEdgeText)}
                   onCompositionStart={() => (isComposing.current = true)}
@@ -361,23 +405,37 @@ export default function TraceTimer({
             )}
           </div>
 
-          <label className="flex items-center gap-3 select-none text-lg font-bold p-2.5 border rounded-lg bg-secondary/30 cursor-pointer focus-within:ring-2 focus-within:ring-primary">
-            <input
+          <div className="flex justify-center">
+            <div
               ref={parityRef}
-              type="checkbox"
-              className="w-5 h-5 accent-primary cursor-pointer rounded"
-              checked={parity}
-              onChange={(e) => setParity(e.target.checked)}
-              disabled={status !== "running"}
-            />
-            <span className={status !== "running" ? "text-muted-foreground cursor-not-allowed" : ""}>
-              Parity
-            </span>
-          </label>
+              tabIndex={status === "running" ? 0 : -1}
+              role="checkbox"
+              aria-checked={parity}
+              className={`flex items-center gap-2 select-none text-lg font-black p-2.5 px-6 border-2 border-zinc-800 bg-black text-zinc-400 focus:outline-none focus:bg-zinc-900 hover:bg-zinc-900 ${
+                status === "running" ? "cursor-pointer" : "opacity-30 cursor-not-allowed"
+              }`}
+              onClick={() => status === "running" && setParity(!parity)}
+              onKeyDown={(e) => {
+                if (status !== "running") return;
+                if (e.key === " " || e.key === "Enter") {
+                  e.preventDefault();
+                  setParity(!parity);
+                }
+              }}
+            >
+              <span>PARITY:</span>
+              <span className={parity ? "text-emerald-500" : "text-rose-500"}>
+                {parity ? "YES" : "NO"}
+              </span>
+            </div>
+          </div>
 
           {status === "running" && (
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 mt-2" onClick={submitTimer}>
-              Submit / Stop
+            <Button
+              className="w-full bg-black hover:bg-zinc-900 text-zinc-400 font-black py-2 mt-2 border-2 border-zinc-800 rounded-none"
+              onClick={submitTimer}
+            >
+              SUBMIT / STOP
             </Button>
           )}
         </>
