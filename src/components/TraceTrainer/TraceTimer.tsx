@@ -31,8 +31,31 @@ export default function TraceTimer({
   const cornerInputRef = useRef<HTMLInputElement>(null);
   const parityRef = useRef<HTMLInputElement>(null);
   const pausedAt = useRef<number | null>(null);
+  
+  // Dùng ref để theo dõi trạng thái gõ tiếng Việt (Unikey)
+  const isComposing = useRef(false);
+
   const [isPaused, setIsPaused] = useState(false);
   const [isDNF, setIsDNF] = useState(false);
+
+  // Helper để lọc text: chỉ giữ chữ cái và khoảng trắng (bỏ số, ký tự đặc biệt, dấu)
+  const sanitizeText = (val: string) => val.replace(/[^a-zA-Z\s]/g, "").toUpperCase();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    if (isComposing.current) {
+      // Nếu đang gõ tiếng Việt, cho phép gõ tự do
+      setter(e.target.value);
+    } else {
+      // Nếu gõ bình thường, lọc ngay lập tức
+      setter(sanitizeText(e.target.value));
+    }
+  };
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    isComposing.current = false;
+    // Lọc lần cuối khi hoàn tất từ có dấu
+    setter(sanitizeText(e.currentTarget.value));
+  };
 
   const focusActiveInput = () => {
     if (scrambleMode === "corner-only") {
@@ -314,7 +337,9 @@ export default function TraceTimer({
                   ref={cornerInputRef}
                   placeholder="Corner memo..."
                   value={cornerText}
-                  onChange={(e) => setCornerText(e.target.value.toUpperCase())}
+                  onChange={(e) => handleInputChange(e, setCornerText)}
+                  onCompositionStart={() => (isComposing.current = true)}
+                  onCompositionEnd={(e) => handleCompositionEnd(e, setCornerText)}
                   disabled={status !== "running"}
                 />
               </div>
@@ -327,7 +352,9 @@ export default function TraceTimer({
                   ref={edgeInputRef}
                   placeholder="Edge memo..."
                   value={edgeText}
-                  onChange={(e) => setEdgeText(e.target.value.toUpperCase())}
+                  onChange={(e) => handleInputChange(e, setEdgeText)}
+                  onCompositionStart={() => (isComposing.current = true)}
+                  onCompositionEnd={(e) => handleCompositionEnd(e, setEdgeText)}
                   disabled={status !== "running"}
                 />
               </div>
