@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: "Memo 3BLD",
     images: [
       {
-        url: "/icons/eyemask.png", // Recommended: create a specific Open Graph image (e.g., 1200x630px) and use its path here.
+        url: "/icons/eyemask.png",
         alt: "Memo 3BLD Preview",
       },
     ],
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Memo 3BLD",
     description: "Memo Generator for 3x3 blindfolded",
-    images: [`${siteUrl}/icons/eyemask.png`], // Recommended: use a specific Twitter card image.
+    images: [`${siteUrl}/icons/eyemask.png`],
   },
 };
 
@@ -46,13 +46,14 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system" // Or "dark" / "light" if you prefer a non-system default
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
           <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-              <span className="text-lg font-semibold sm:text-xl">
+            {/* Tăng height và padding cho header */}
+            <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-12">
+              <span className="text-xl font-semibold sm:text-2xl">
                 BLD Trainer
               </span>
               <div className="flex items-center gap-4">
@@ -60,7 +61,12 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          
+          {/* Bao children trong container để nội dung cân giữa và thoáng hơn */}
+          <main className="container mx-auto max-w-7xl px-6 py-10 lg:px-12 lg:py-16">
+            {children}
+          </main>
+          
           <Analytics />
           <Toaster />
         </ThemeProvider>
