@@ -1,3 +1,4 @@
+// src/components/TraceTrainer/TraceTimer.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -31,7 +32,6 @@ export default function TraceTimer({
   const parityRef = useRef<HTMLInputElement>(null);
   const pausedAt = useRef<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [isConfirmingGiveUp, setIsConfirmingGiveUp] = useState(false);
   const [isDNF, setIsDNF] = useState(false);
 
   const focusActiveInput = () => {
@@ -56,7 +56,6 @@ export default function TraceTimer({
     setStartTime(now);
     setStatus("running");
     setIsPaused(false);
-    setIsConfirmingGiveUp(false);
     pausedAt.current = null;
 
     window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "running" } }));
@@ -80,6 +79,7 @@ export default function TraceTimer({
     if (status === "running" && !isPaused) {
       pausedAt.current = performance.now();
       setIsPaused(true);
+      window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "paused" } }));
     }
   };
 
@@ -88,21 +88,11 @@ export default function TraceTimer({
       const pauseDuration = performance.now() - pausedAt.current;
       setStartTime((prev) => prev + pauseDuration);
       setIsPaused(false);
-      setIsConfirmingGiveUp(false);
       pausedAt.current = null;
+      window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "running" } }));
       requestAnimationFrame(() => {
         focusActiveInput();
       });
-    }
-  };
-
-  const giveUpTimer = () => {
-    if (status === "running") {
-      if (!isPaused) {
-        pausedAt.current = performance.now();
-        setIsPaused(true);
-      }
-      setIsConfirmingGiveUp(true);
     }
   };
 
@@ -110,13 +100,8 @@ export default function TraceTimer({
     setIsDNF(true);
     setStatus("finished");
     setIsPaused(false);
-    setIsConfirmingGiveUp(false);
     pausedAt.current = null;
     window.dispatchEvent(new CustomEvent("trace-status-change", { detail: { status: "finished", isDNF: true } }));
-  };
-
-  const cancelGiveUp = () => {
-    setIsConfirmingGiveUp(false);
   };
 
   useEffect(() => {
@@ -214,11 +199,14 @@ export default function TraceTimer({
 
       if (e.key === "Escape") {
         if (status === "running") {
+          if (document.querySelector('[role="dialog"]')) {
+            return;
+          }
           e.preventDefault();
-          if (isConfirmingGiveUp) {
-            cancelGiveUp();
+          if (isPaused) {
+            resumeTimer();
           } else {
-            giveUpTimer();
+            pauseTimer();
           }
         }
       }
@@ -226,7 +214,7 @@ export default function TraceTimer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [status, startTime, isPaused, isConfirmingGiveUp, newScramble, scrambleMode, useTimer]);
+  }, [status, startTime, isPaused, newScramble, scrambleMode, useTimer]);
 
   useEffect(() => {
     if (!useTimer) return;
@@ -239,7 +227,8 @@ export default function TraceTimer({
 
     const handleSettingsToggle = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.isOpen && status === "running") {
+      const isOpen = !!customEvent.detail?.isOpen;
+      if (isOpen && status === "running") {
         pauseTimer();
       }
     };
@@ -251,52 +240,36 @@ export default function TraceTimer({
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("trace-settings-toggle", handleSettingsToggle);
     };
-  }, [status, isPaused, useTimer]);
+  }, [status, useTimer]);
 
   useEffect(() => {
     if (!useTimer) return;
 
+    const handlePauseEvent = () => pauseTimer();
     const handleResumeEvent = () => resumeTimer();
-    const handleGiveUpEvent = () => giveUpTimer();
+    const handleGiveUpEvent = () => confirmGiveUp();
 
+    window.addEventListener("trace-pause", handlePauseEvent);
     window.addEventListener("trace-resume", handleResumeEvent);
     window.addEventListener("trace-giveup", handleGiveUpEvent);
 
     return () => {
+      window.removeEventListener("trace-pause", handlePauseEvent);
       window.removeEventListener("trace-resume", handleResumeEvent);
       window.removeEventListener("trace-giveup", handleGiveUpEvent);
     };
-  }, [status, isPaused, startTime, scrambleMode, useTimer]);
+  }, [status, isPaused, startTime, useTimer]);
 
-  // ẨN HOÀN TOÀN COMPONENT KHI TẮT TIMER ĐỂ VỀ MẶC ĐỊNH
   if (!useTimer) {
     return null;
   }
 
   return (
     <div className="my-4 rounded-xl border p-4 space-y-4">
-      {isConfirmingGiveUp ? (
+      {isPaused ? (
         <div className="space-y-2 py-4">
-          <div className="text-center text-red-500 font-bold mb-2 uppercase tracking-wider">
-            Are you sure you want to Give Up?
-          </div>
-          <button
-            className="w-full rounded-lg border p-2 bg-red-600 hover:bg-red-700 text-white font-medium"
-            onClick={confirmGiveUp}
-          >
-            Yes, Give Up (DNF)
-          </button>
-          <button
-            className="w-full rounded-lg border p-2 bg-secondary text-secondary-foreground font-medium"
-            onClick={cancelGiveUp}
-          >
-            No, Go Back
-          </button>
-        </div>
-      ) : isPaused ? (
-        <div className="space-y-2 py-4">
-          <div className="text-center text-amber-500 font-semibold mb-2">
-            TRACE PAUSED
+          <div className="text-center text-amber-500 font-semibold mb-2 uppercase tracking-wider">
+            Trace Paused
           </div>
           <button
             className="w-full rounded-lg border p-2 bg-primary text-primary-foreground font-medium"
@@ -305,8 +278,8 @@ export default function TraceTimer({
             Continue
           </button>
           <button
-            className="w-full rounded-lg border border-red-500 p-2 text-red-500 font-medium bg-background"
-            onClick={giveUpTimer}
+            className="w-full rounded-lg border border-red-500 p-2 text-red-500 font-medium bg-background hover:bg-red-500/10 transition-colors"
+            onClick={() => window.dispatchEvent(new CustomEvent("trace-request-giveup"))}
           >
             Give Up
           </button>
@@ -324,10 +297,6 @@ export default function TraceTimer({
                   .toFixed(3)
                   .padStart(6, "0")}`
               )}
-            </div>
-
-            <div className="text-sm text-muted-foreground uppercase tracking-wider">
-              {status === "running" ? "Show Result(DNF)" : "Show Results"}
             </div>
           </div>
 

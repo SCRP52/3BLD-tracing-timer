@@ -1,3 +1,4 @@
+// src/components/HomePage.tsx
 "use client";
 
 import { Separator } from "@/components/ui/separator";
@@ -23,9 +24,10 @@ export default function HomePage() {
     "F2 R' B' U R' L F' L F' B D' R B L2",
   );
   const [scrambleMode, setScrambleMode] = useState<"normal" | "edge-only" | "corner-only">("normal");
-  const [timerStatus, setTimerStatus] = useState<"ready" | "running" | "finished">("ready");
+  const [timerStatus, setTimerStatus] = useState<"ready" | "running" | "paused" | "finished">("ready");
   const [hasRevealed, setHasRevealed] = useState(false);
   const [useTimer, setUseTimer] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const context = useContext(SettingsContext);
   if (!context)
@@ -35,7 +37,6 @@ export default function HomePage() {
     settings: { orientation, scrambleOrientation },
   } = context;
 
-  // Lắng nghe cấu hình bật/tắt Timer từ Settings và trạng thái Timer
   useEffect(() => {
     const saved = localStorage.getItem("useTimer");
     if (saved !== null) {
@@ -56,29 +57,49 @@ export default function HomePage() {
       }
     };
 
+    const handleRequestGiveUp = () => {
+      setShowConfirm(true);
+    };
+
     window.addEventListener("trace-timer-toggle", handleTimerToggle);
     window.addEventListener("trace-status-change", handleStatusChange);
+    window.addEventListener("trace-request-giveup", handleRequestGiveUp);
     return () => {
       window.removeEventListener("trace-timer-toggle", handleTimerToggle);
       window.removeEventListener("trace-status-change", handleStatusChange);
+      window.removeEventListener("trace-request-giveup", handleRequestGiveUp);
     };
   }, []);
 
   useEffect(() => {
     setTimerStatus("ready");
     setHasRevealed(false);
+    setShowConfirm(false);
   }, [scramble]);
 
   const handleRevealResult = () => {
     if (timerStatus === "running") {
-      setTimerStatus("finished");
-      setHasRevealed(true);
-      window.dispatchEvent(new CustomEvent("trace-giveup"));
+      window.dispatchEvent(new CustomEvent("trace-pause"));
+      return;
+    }
+    if (timerStatus === "paused") {
+      setShowConfirm(true);
       return;
     }
     if (timerStatus === "finished") {
       setHasRevealed(true);
     }
+  };
+
+  const handleConfirmReveal = () => {
+    window.dispatchEvent(new CustomEvent("trace-giveup"));
+    setTimerStatus("finished");
+    setHasRevealed(true);
+    setShowConfirm(false);
+  };
+
+  const handleCancelReveal = () => {
+    setShowConfirm(false);
   };
 
   const triggerNewScramble = () => {
@@ -127,51 +148,82 @@ export default function HomePage() {
   const isTimerRunning = useTimer && timerStatus === "running";
 
   return (
-    <div className="container mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Settings />
-        <CubeSidebar
-          scramble={scrambleForPreview}
-          rotation={rotationForPreview}
-        />
-        <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
-          <ScrambleButton setScramble={setScramble} onScrambleTypeChange={setScrambleMode} />
+    <div className="relative min-h-screen w-full">
+      <div className={`container mx-auto max-w-3xl p-4 sm:p-6 space-y-6 transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Settings />
+          <CubeSidebar
+            scramble={scrambleForPreview}
+            rotation={rotationForPreview}
+          />
+          <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
+            <ScrambleButton setScramble={setScramble} onScrambleTypeChange={setScrambleMode} />
+          </div>
         </div>
-      </div>
-      
-      <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
-        <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+        
+        <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
+          <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+        </div>
+
+        <Separator className="my-6" />
+        
+        <TraceTimer 
+          key={scramble}
+          newScramble={triggerNewScramble} 
+          scrambleMode={scrambleMode} 
+          useTimer={useTimer}
+        />
+        
+        {useTimer ? (
+          timerStatus !== "ready" && (
+            <div className="space-y-4">
+              {!hasRevealed ? (
+                timerStatus !== "paused" && (
+                  <Button 
+                    variant="secondary"
+                    className="w-full py-8 text-base font-semibold border border-dashed border-muted-foreground/30"
+                    onClick={handleRevealResult}
+                  >
+                    {timerStatus === "running" ? "Pause" : "Show Results"}
+                  </Button>
+                )
+              ) : (
+                <div className="rounded-xl border p-4 bg-card text-card-foreground">
+                  <MemoResult cube={cube} />
+                </div>
+              )}
+            </div>
+          )
+        ) : (
+          <MemoResult cube={cube} />
+        )}
       </div>
 
-      <Separator className="my-6" />
-      
-      <TraceTimer 
-        key={scramble}
-        newScramble={triggerNewScramble} 
-        scrambleMode={scrambleMode} 
-        useTimer={useTimer}
-      />
-      
-      {useTimer ? (
-        timerStatus !== "ready" && (
-          <div className="space-y-4">
-            {!hasRevealed ? (
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/40 p-4">
+          <div className="bg-card text-card-foreground p-6 rounded-xl border shadow-2xl max-w-xs w-full text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-lg font-bold text-destructive">Confirm DNF</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              This attempt will be marked as DNF and the solution will be revealed.
+            </p>
+            <div className="flex gap-2 pt-2">
               <Button 
-                variant="secondary"
-                className="w-full py-8 text-base font-semibold border border-dashed border-muted-foreground/30"
-                onClick={handleRevealResult}
+                variant="outline" 
+                className="flex-1" 
+                onClick={handleCancelReveal}
               >
-                {timerStatus === "running" ? "Show Result(DNF)" : "Show Results"}
+                No
               </Button>
-            ) : (
-              <div className="rounded-xl border p-4 bg-card text-card-foreground">
-                <MemoResult cube={cube} />
-              </div>
-            )}
+              <Button 
+                variant="destructive" 
+                className="flex-1" 
+                onClick={handleConfirmReveal}
+              >
+                Yes
+              </Button>
+            </div>
           </div>
-        )
-      ) : (
-        <MemoResult cube={cube} />
+        </div>
       )}
     </div>
   );
