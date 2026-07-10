@@ -317,20 +317,20 @@ export default function TraceTimer({
   }
 
   return (
-    <div className="my-4 rounded-none border-2 border-zinc-800 p-4 space-y-4 bg-black text-zinc-100">
+    <div className="my-2 sm:my-4 rounded-none border-2 border-zinc-800 p-3 sm:p-4 space-y-4 bg-black text-zinc-100 max-w-full overflow-hidden mx-auto">
       {isPaused ? (
-        <div className="space-y-2 py-4 border-2 border-zinc-800 p-4 bg-black">
-          <div className="text-center font-black mb-2 uppercase tracking-wider underline text-zinc-500">
+        <div className="space-y-2 py-4 border-2 border-zinc-800 p-3 sm:p-4 bg-black">
+          <div className="text-center font-black mb-2 uppercase tracking-wider underline text-zinc-500 text-sm sm:text-base">
             Trace Paused
           </div>
           <button
-            className="w-full rounded-none border-2 border-zinc-700 p-2 bg-zinc-900 text-zinc-200 font-black hover:bg-zinc-800"
+            className="w-full rounded-none border-2 border-zinc-700 p-2.5 sm:p-2 bg-zinc-900 text-zinc-200 font-black hover:bg-zinc-800 active:bg-zinc-800"
             onClick={resumeTimer}
           >
             CONTINUE
           </button>
           <button
-            className="w-full rounded-none border-2 border-zinc-700 p-2 font-black bg-black text-zinc-500 hover:bg-zinc-900"
+            className="w-full rounded-none border-2 border-zinc-700 p-2.5 sm:p-2 font-black bg-black text-zinc-500 hover:bg-zinc-900 active:bg-zinc-900"
             onClick={() =>
               window.dispatchEvent(new CustomEvent("trace-request-giveup"))
             }
@@ -340,9 +340,9 @@ export default function TraceTimer({
         </div>
       ) : (
         <>
-          <div className={`text-center border-2 border-zinc-800 p-4 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
+          <div className={`text-center border-2 border-zinc-800 p-3 sm:p-4 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
             <div
-              className={`text-8xl font-black font-mono tracking-tighter ${
+              className={`text-5xl xs:text-6xl sm:text-8xl font-black font-mono tracking-tighter ${
                 isDNF ? "line-through text-zinc-700" : "text-zinc-200"
               }`}
             >
@@ -360,21 +360,21 @@ export default function TraceTimer({
 
           {status === "ready" && (
             <Button
-              className="w-full h-16 text-2xl font-black bg-zinc-900 text-zinc-400 border-2 border-zinc-800 rounded-none transition-colors hover:bg-zinc-600 hover:text-white"
+              className="w-full h-14 sm:h-16 text-xl sm:text-2xl font-black bg-zinc-900 text-zinc-400 border-2 border-zinc-800 rounded-none transition-colors hover:bg-zinc-600 hover:text-white active:bg-zinc-600 active:text-white"
               onClick={startTrace}
             >
               START TRACE
             </Button>
           )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {scrambleMode !== "edge-only" && (
-              <div className="p-4 border-2 border-zinc-800 bg-black space-y-2">
-                <span className="text-xl font-black uppercase tracking-wide text-zinc-400">
+              <div className="p-3 sm:p-4 border-2 border-zinc-800 bg-black space-y-1.5">
+                <span className="text-lg sm:text-xl font-black uppercase tracking-wide text-zinc-400">
                   Corners
                 </span>
                 <Input
-                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800"
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
                   ref={cornerInputRef}
                   placeholder="Corner..."
                   value={cornerText}
@@ -387,12 +387,12 @@ export default function TraceTimer({
             )}
 
             {scrambleMode !== "corner-only" && (
-              <div className="p-4 border-2 border-zinc-800 bg-black space-y-2">
-                <span className="text-xl font-black uppercase tracking-wide text-zinc-400">
+              <div className="p-3 sm:p-4 border-2 border-zinc-800 bg-black space-y-1.5">
+                <span className="text-lg sm:text-xl font-black uppercase tracking-wide text-zinc-400">
                   Edges
                 </span>
                 <Input
-                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800"
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
                   ref={edgeInputRef}
                   placeholder="Edge..."
                   value={edgeText}
@@ -411,7 +411,7 @@ export default function TraceTimer({
               tabIndex={status === "running" ? 0 : -1}
               role="checkbox"
               aria-checked={parity}
-              className={`flex items-center gap-2 select-none text-lg font-black p-2.5 px-6 border-2 border-zinc-800 bg-black text-zinc-400 focus:outline-none focus:bg-zinc-900 hover:bg-zinc-900 ${
+              className={`flex items-center gap-2 select-none text-base sm:text-lg font-black p-2 sm:p-2.5 px-4 sm:px-6 border-2 border-zinc-800 bg-black text-zinc-400 focus:outline-none focus:bg-zinc-900 hover:bg-zinc-900 active:bg-zinc-900 touch-manipulation ${
                 status === "running" ? "cursor-pointer" : "opacity-30 cursor-not-allowed"
               }`}
               onClick={() => status === "running" && setParity(!parity)}
@@ -432,7 +432,7 @@ export default function TraceTimer({
 
           {status === "running" && (
             <Button
-              className="w-full bg-black hover:bg-zinc-900 text-zinc-400 font-black py-2 mt-2 border-2 border-zinc-800 rounded-none"
+              className="w-full bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-800 text-zinc-300 font-black py-2.5 sm:py-2 border-2 border-zinc-800 rounded-none text-base h-11 sm:h-auto"
               onClick={submitTimer}
             >
               SUBMIT / STOP

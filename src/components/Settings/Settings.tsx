@@ -69,7 +69,7 @@ function TracingTimerSetting() {
         <div>
           <h4 className="text-sm font-semibold">Enable Tracing write down</h4>
           <p className="text-xs text-muted-foreground">
-            Sử dụng bộ đếm thời gian và ẩn kết quả khi trace.
+            Hide or show the tracing write down during the solve. Easier to practice with some more functions
           </p>
         </div>
         <input
@@ -84,7 +84,7 @@ function TracingTimerSetting() {
         <div>
           <h4 className="text-sm font-semibold">Hide timer during solve</h4>
           <p className="text-xs text-muted-foreground">
-            Ẩn số giây chạy khi đang trong quá trình giải.
+            Hide the timer during the solve process. make it less distracting and more focused on the tracing write down.
           </p>
         </div>
         <input
