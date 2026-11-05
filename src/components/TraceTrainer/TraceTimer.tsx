@@ -303,9 +303,9 @@ export default function TraceTimer({
   }
 
   return (
-    <div className="my-0 rounded-none border-2 border-zinc-800 p-2 sm:p-3 space-y-2 sm:space-y-3 bg-black text-zinc-100 max-w-full overflow-hidden mx-auto">
+    <div className="my-0 grid grid-cols-1 gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_auto] lg:items-center rounded-none border-2 border-zinc-800 p-2 sm:p-3 bg-black text-zinc-100 max-w-full overflow-hidden mx-auto">
       {isPaused ? (
-        <div className="space-y-2 py-4 border-2 border-zinc-800 p-3 sm:p-4 bg-black">
+        <div className="space-y-2 py-2 border-2 border-zinc-800 p-2 sm:p-3 bg-black lg:col-span-3">
           <div className="text-center font-black mb-2 uppercase tracking-wider underline text-zinc-500 text-sm sm:text-base">
             Trace Paused
           </div>
@@ -326,7 +326,7 @@ export default function TraceTimer({
         </div>
       ) : (
         <>
-          <div className={`text-center border-2 border-zinc-800 p-1 sm:p-2 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
+          <div className={`text-center border-2 border-zinc-800 p-1 sm:p-2 bg-black lg:col-start-1 ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
             <div
               className={`text-4xl sm:text-6xl lg:text-7xl font-black font-mono tracking-tighter ${
                 isDNF ? "line-through text-zinc-700" : "text-zinc-200"
@@ -347,7 +347,7 @@ export default function TraceTimer({
           {status === "ready" && (
             <Button
               type="button"
-              className="w-full min-h-12 sm:min-h-14 touch-manipulation select-none text-lg sm:text-xl font-black bg-zinc-900 text-zinc-200 border-2 border-zinc-700 rounded-none transition-colors hover:bg-zinc-700 hover:text-white active:bg-zinc-600 active:text-white"
+              className="w-full min-h-11 sm:min-h-12 lg:col-start-2 touch-manipulation select-none text-lg sm:text-xl font-black bg-zinc-900 text-zinc-200 border-2 border-zinc-700 rounded-none transition-colors hover:bg-zinc-700 hover:text-white active:bg-zinc-600 active:text-white"
               onClick={startTrace}
               onTouchEnd={(event) => {
                 // Prevent the mobile browser's synthetic click/scroll gesture
@@ -360,7 +360,7 @@ export default function TraceTimer({
             </Button>
           )}
 
-          <div className={`grid gap-2 ${scrambleMode === "normal" ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div className={`grid gap-2 lg:col-span-2 ${scrambleMode === "normal" ? "grid-cols-2" : "grid-cols-1"}`}>
             {scrambleMode !== "edge-only" && (
               <div className="p-2 border-2 border-zinc-800 bg-black space-y-1">
                 <span className="text-xs sm:text-sm font-black uppercase tracking-wide text-zinc-400">
@@ -402,7 +402,7 @@ export default function TraceTimer({
             )}
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center lg:col-start-3 lg:row-start-2">
             <div
               ref={parityRef}
               tabIndex={status === "running" ? 0 : -1}

@@ -160,13 +160,11 @@ export default function HomePage() {
           <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
             <ScrambleButton setScramble={setScramble} onScrambleTypeChange={setScrambleMode} />
           </div>
-        </div>
-        
-        <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
-          <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+          <div className={`basis-full min-w-0 sm:basis-auto sm:flex-1 ${isTimerRunning ? "pointer-events-none opacity-50" : ""}`}>
+            <ScrambleInputField scramble={scramble} setScramble={setScramble} />
+          </div>
         </div>
 
-        {/* Tăng độ xám thanh ngăn cách */}
         <Separator className="my-1 bg-zinc-400 dark:bg-zinc-600" />
         
         <TraceTimer 
