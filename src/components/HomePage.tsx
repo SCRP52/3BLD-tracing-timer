@@ -148,8 +148,8 @@ export default function HomePage() {
   const isTimerRunning = useTimer && timerStatus === "running";
 
   return (
-    <div className="relative min-h-screen w-full">
-      <div className={`container mx-auto max-w-6xl p-8 lg:p-12 space-y-10 text-lg transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
+    <div className="relative min-h-[calc(100dvh-3.5rem)] w-full">
+      <div className={`container mx-auto max-w-6xl px-4 py-5 sm:p-8 lg:p-12 space-y-6 sm:space-y-10 text-base sm:text-lg transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
         
         <div className="flex flex-wrap items-center gap-4">
           <Settings />

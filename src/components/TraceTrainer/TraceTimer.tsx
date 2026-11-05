@@ -73,14 +73,6 @@ export default function TraceTimer({
     setter(sanitizeText(e.currentTarget.value));
   };
 
-  const focusActiveInput = () => {
-    if (scrambleMode === "edge-only") {
-      edgeInputRef.current?.focus();
-    } else {
-      cornerInputRef.current?.focus();
-    }
-  };
-
   const startTrace = () => {
     if (!useTimer || status !== "ready") return;
 
@@ -99,9 +91,6 @@ export default function TraceTimer({
       new CustomEvent("trace-status-change", { detail: { status: "running" } })
     );
 
-    requestAnimationFrame(() => {
-      focusActiveInput();
-    });
   };
 
   const submitTimer = () => {
@@ -137,9 +126,6 @@ export default function TraceTimer({
       window.dispatchEvent(
         new CustomEvent("trace-status-change", { detail: { status: "running" } })
       );
-      requestAnimationFrame(() => {
-        focusActiveInput();
-      });
     }
   };
 
@@ -360,8 +346,15 @@ export default function TraceTimer({
 
           {status === "ready" && (
             <Button
-              className="w-full h-14 sm:h-16 text-xl sm:text-2xl font-black bg-zinc-900 text-zinc-400 border-2 border-zinc-800 rounded-none transition-colors hover:bg-zinc-600 hover:text-white active:bg-zinc-600 active:text-white"
+              type="button"
+              className="w-full min-h-14 sm:min-h-16 touch-manipulation select-none text-xl sm:text-2xl font-black bg-zinc-900 text-zinc-200 border-2 border-zinc-700 rounded-none transition-colors hover:bg-zinc-700 hover:text-white active:bg-zinc-600 active:text-white"
               onClick={startTrace}
+              onTouchEnd={(event) => {
+                // Prevent the mobile browser's synthetic click/scroll gesture
+                // from swallowing the start action after a touch drag.
+                if (event.cancelable) event.preventDefault();
+                startTrace();
+              }}
             >
               START TRACE
             </Button>
@@ -374,6 +367,8 @@ export default function TraceTimer({
                   Corners
                 </span>
                 <Input
+                  inputMode="text"
+                  autoCapitalize="characters"
                   className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
                   ref={cornerInputRef}
                   placeholder="Corner..."
@@ -392,6 +387,8 @@ export default function TraceTimer({
                   Edges
                 </span>
                 <Input
+                  inputMode="text"
+                  autoCapitalize="characters"
                   className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
                   ref={edgeInputRef}
                   placeholder="Edge..."
