@@ -303,7 +303,7 @@ export default function TraceTimer({
   }
 
   return (
-    <div className="my-2 sm:my-4 rounded-none border-2 border-zinc-800 p-3 sm:p-4 space-y-4 bg-black text-zinc-100 max-w-full overflow-hidden mx-auto">
+    <div className="my-0 rounded-none border-2 border-zinc-800 p-2 sm:p-3 space-y-2 sm:space-y-3 bg-black text-zinc-100 max-w-full overflow-hidden mx-auto">
       {isPaused ? (
         <div className="space-y-2 py-4 border-2 border-zinc-800 p-3 sm:p-4 bg-black">
           <div className="text-center font-black mb-2 uppercase tracking-wider underline text-zinc-500 text-sm sm:text-base">
@@ -326,9 +326,9 @@ export default function TraceTimer({
         </div>
       ) : (
         <>
-          <div className={`text-center border-2 border-zinc-800 p-3 sm:p-4 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
+          <div className={`text-center border-2 border-zinc-800 p-1 sm:p-2 bg-black ${hideTimerDuringSolve && status === "running" ? "invisible" : ""}`}>
             <div
-              className={`text-5xl xs:text-6xl sm:text-8xl font-black font-mono tracking-tighter ${
+              className={`text-4xl sm:text-6xl lg:text-7xl font-black font-mono tracking-tighter ${
                 isDNF ? "line-through text-zinc-700" : "text-zinc-200"
               }`}
             >
@@ -347,7 +347,7 @@ export default function TraceTimer({
           {status === "ready" && (
             <Button
               type="button"
-              className="w-full min-h-14 sm:min-h-16 touch-manipulation select-none text-xl sm:text-2xl font-black bg-zinc-900 text-zinc-200 border-2 border-zinc-700 rounded-none transition-colors hover:bg-zinc-700 hover:text-white active:bg-zinc-600 active:text-white"
+              className="w-full min-h-12 sm:min-h-14 touch-manipulation select-none text-lg sm:text-xl font-black bg-zinc-900 text-zinc-200 border-2 border-zinc-700 rounded-none transition-colors hover:bg-zinc-700 hover:text-white active:bg-zinc-600 active:text-white"
               onClick={startTrace}
               onTouchEnd={(event) => {
                 // Prevent the mobile browser's synthetic click/scroll gesture
@@ -360,16 +360,16 @@ export default function TraceTimer({
             </Button>
           )}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className={`grid gap-2 ${scrambleMode === "normal" ? "grid-cols-2" : "grid-cols-1"}`}>
             {scrambleMode !== "edge-only" && (
-              <div className="p-3 sm:p-4 border-2 border-zinc-800 bg-black space-y-1.5">
-                <span className="text-lg sm:text-xl font-black uppercase tracking-wide text-zinc-400">
+              <div className="p-2 border-2 border-zinc-800 bg-black space-y-1">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wide text-zinc-400">
                   Corners
                 </span>
                 <Input
                   inputMode="text"
                   autoCapitalize="characters"
-                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-sm sm:text-base h-9 sm:h-10"
                   ref={cornerInputRef}
                   placeholder="Corner..."
                   value={cornerText}
@@ -382,14 +382,14 @@ export default function TraceTimer({
             )}
 
             {scrambleMode !== "corner-only" && (
-              <div className="p-3 sm:p-4 border-2 border-zinc-800 bg-black space-y-1.5">
-                <span className="text-lg sm:text-xl font-black uppercase tracking-wide text-zinc-400">
+              <div className="p-2 border-2 border-zinc-800 bg-black space-y-1">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wide text-zinc-400">
                   Edges
                 </span>
                 <Input
                   inputMode="text"
                   autoCapitalize="characters"
-                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-base sm:text-lg h-10 sm:h-12"
+                  className="rounded-none border-2 border-zinc-800 focus-visible:ring-0 focus-visible:border-zinc-600 bg-black text-zinc-100 placeholder:text-zinc-800 text-sm sm:text-base h-9 sm:h-10"
                   ref={edgeInputRef}
                   placeholder="Edge..."
                   value={edgeText}
@@ -408,7 +408,7 @@ export default function TraceTimer({
               tabIndex={status === "running" ? 0 : -1}
               role="checkbox"
               aria-checked={parity}
-              className={`flex items-center gap-2 select-none text-base sm:text-lg font-black p-2 sm:p-2.5 px-4 sm:px-6 border-2 border-zinc-800 bg-black text-zinc-400 focus:outline-none focus:bg-zinc-900 hover:bg-zinc-900 active:bg-zinc-900 touch-manipulation ${
+              className={`flex items-center gap-2 select-none text-sm sm:text-base font-black p-1.5 px-3 border-2 border-zinc-800 bg-black text-zinc-400 focus:outline-none focus:bg-zinc-900 hover:bg-zinc-900 active:bg-zinc-900 touch-manipulation ${
                 status === "running" ? "cursor-pointer" : "opacity-30 cursor-not-allowed"
               }`}
               onClick={() => status === "running" && setParity(!parity)}
