@@ -149,9 +149,9 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-[calc(100dvh-3.5rem)] w-full">
-      <div className={`container mx-auto max-w-6xl px-2 py-2 sm:px-4 sm:py-4 lg:px-6 space-y-2 sm:space-y-3 text-sm sm:text-base transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
+      <div className={`container mx-auto max-w-6xl px-4 py-5 sm:p-8 lg:p-12 space-y-6 sm:space-y-10 text-base sm:text-lg transition-all duration-300 ${showConfirm ? "blur-2xl pointer-events-none select-none" : ""}`}>
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4">
           <Settings />
           <CubeSidebar
             scramble={scrambleForPreview}
@@ -160,12 +160,14 @@ export default function HomePage() {
           <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
             <ScrambleButton setScramble={setScramble} onScrambleTypeChange={setScrambleMode} />
           </div>
-          <div className={`basis-full min-w-0 sm:basis-auto sm:flex-1 ${isTimerRunning ? "pointer-events-none opacity-50" : ""}`}>
-            <ScrambleInputField scramble={scramble} setScramble={setScramble} />
-          </div>
+        </div>
+        
+        <div className={isTimerRunning ? "pointer-events-none opacity-50" : ""}>
+          <ScrambleInputField scramble={scramble} setScramble={setScramble} />
         </div>
 
-        <Separator className="my-1 bg-zinc-400 dark:bg-zinc-600" />
+        {/* Tăng độ xám thanh ngăn cách */}
+        <Separator className="my-8 bg-zinc-400 dark:bg-zinc-600" />
         
         <TraceTimer 
           key={scramble}
@@ -176,13 +178,13 @@ export default function HomePage() {
         
         {useTimer ? (
           timerStatus !== "ready" && (
-            <div className="space-y-2">
+            <div className="space-y-6">
               {!hasRevealed ? (
                 timerStatus !== "paused" && (
                   <Button 
                     variant="secondary"
                     // Tăng độ xám viền nút Show Results
-                    className="w-full py-3 text-base font-bold border border-dashed border-zinc-400 dark:border-zinc-500 hover:bg-secondary/80"
+                    className="w-full py-10 text-lg font-bold border border-dashed border-zinc-400 dark:border-zinc-500 hover:bg-secondary/80"
                     onClick={handleRevealResult}
                   >
                     {timerStatus === "running" ? "Pause" : "Show Results"}
@@ -190,14 +192,14 @@ export default function HomePage() {
                 )
               ) : (
                 // Tăng độ xám viền khung chứa kết quả
-                <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-3 bg-card text-card-foreground">
+                <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-6 bg-card text-card-foreground">
                   <MemoResult cube={cube} />
                 </div>
               )}
             </div>
           )
         ) : (
-          <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-3 bg-card text-card-foreground">
+          <div className="rounded-xl border border-zinc-400 dark:border-zinc-500 p-6 bg-card text-card-foreground">
             <MemoResult cube={cube} />
           </div>
         )}

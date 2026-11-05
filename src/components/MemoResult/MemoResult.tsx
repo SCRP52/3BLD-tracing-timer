@@ -23,7 +23,7 @@ export default function MemoResult({ cube }: { cube: Cube }) {
     throw new Error("SettingsPanel must be used within a SettingsProvider");
 
   const { settings } = context;
-  const [isResultOpen, setIsResultOpen] = useState(false);
+  const [isResultOpen, setIsResultOpen] = useState(true);
   const handleGiveUp = () => {
   window.dispatchEvent(new CustomEvent("trace-giveup"));
 };
